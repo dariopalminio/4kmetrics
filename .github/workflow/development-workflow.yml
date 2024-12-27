@@ -1,0 +1,30 @@
+name: 4KMetrics Development Flow
+
+on:
+  push:
+    branches:
+      - development
+      - feature/*
+    paths-ignore:
+      - '.github/**'
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+   
+    environment:
+      name: development
+      url: https://tu-url-de-development.com
+     
+    steps:
+    - name: 4KeyMetrics Deployment to development
+      run: |
+        # Este es un paso ficticio que no realiza ninguna acción útil.
+        # Puedes poner cualquier comando aquí, como 'echo', 'sleep', etc.
+        echo "Dummy Deployment to development step completed successfully!"
+
+    - name: 4KeyMetrics Deployment to development Success
+      if: always()
+      run: |
+        # Este paso siempre se ejecutará, incluso si el paso anterior falla.
+        # Aquí puedes colocar un mensaje indicando que el despliegue fue exitoso.
+        echo "Deployment to development was successful!"
