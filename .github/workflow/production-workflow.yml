@@ -1,0 +1,30 @@
+name: 4KMetrics Production Flow
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - '.github/**'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+   
+    environment:
+      name: production
+      url: https://tu-url-de-production.com
+     
+    steps:
+    - name: 4KMetrics Deployment to production
+      run: |
+        # Este es un paso ficticio que no realiza ninguna acción útil.
+        # Puedes poner cualquier comando aquí, como 'echo', 'sleep', etc.
+        echo "Dummy Deployment to production step completed successfully!"
+
+    - name: 4KMetrics Deployment to production Success
+      if: always()
+      run: |
+        # Este paso siempre se ejecutará, incluso si el paso anterior falla.
+        # Aquí puedes colocar un mensaje indicando que el despliegue fue exitoso.
+        echo "Deployment to production was successful!"
