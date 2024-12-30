@@ -99,42 +99,31 @@ def process_labels_to_str(labels_json):
     return ",".join(labels)
 
 def is_feature(github_pr):
-    #Doesn't fix?
-    if (github_pr["is_fix"] or github_pr["is_hotfix"] or github_pr["is_rollback"]):
-        return False
-    #labels contains feat?
-    if ('type:feat' in github_pr["labels"].lower() or 'feat' in github_pr["labels"].lower() or 'enhancement' in github_pr["labels"].lower()):
+    text_lower = f"{github_pr["title"].lower()},{github_pr["labels"].lower()},{github_pr["branch_origin"].lower()}"
+    #contains feat?
+    if ('feat' in text_lower or 'enhancement' in text_lower):
         return True
-    #title contains bug fix?
-    if (('feat' in github_pr["title"].lower())):
+    #contains refactor?
+    if ('refactor' in text_lower):
         return True
-    #labels contains refactor?
-    if ('type:refactor' in github_pr["labels"].lower() or 'refactor' in github_pr["labels"].lower()):
+    #contains test?
+    if ('test' in text_lower):
         return True
-    #labels contains test?
-    if ('type:test' in github_pr["labels"].lower() or 'test' in github_pr["labels"].lower()):
+    #contains style?
+    if ('style' in text_lower):
         return True
-    #labels contains style?
-    if ('type:style' in github_pr["labels"].lower() or 'style' in github_pr["labels"].lower()):
-        return True
-    #labels contains doc?
-    if ('type:docs' in github_pr["labels"].lower() or 'doc' in github_pr["labels"].lower()):
-        return False
-    #labels contains build or chore?
-    if ('chore' in github_pr["labels"].lower() or 'build' in github_pr["labels"].lower()):
+    #contains performance or chore?
+    if ('perf' in text_lower):
         return False
     return False
 
 def is_fix(github_pr):
     text_lower = f"{github_pr["title"].lower()},{github_pr["labels"].lower()},{github_pr["branch_origin"].lower()}"
     #contains bug fix?
-    if (('bug' in text_lower or 'bugfix' in text_lower or 'bug-fix' in text_lower or 'bug fix' in text_lower)):
+    if (('type: fix' in text_lower or 'bug' in text_lower or 'bugfix' in text_lower or 'bug-fix' in text_lower or 'bug fix' in text_lower)):
         return True
     #contains hotfix?
     if ('hotfix' in text_lower or 'hot-fix' in text_lower or 'hot fix' in text_lower):
-        return True
-    #contains fix?    
-    if ('type:fix' in text_lower or 'type:bugfix' in text_lower or 'fix' in text_lower):
         return True
     return False
 
@@ -146,9 +135,9 @@ def is_hotfix(github_pr):
     return False
 
 def is_rollback(github_pr):
-    text_lower = f"{github_pr["title"].lower()},{github_pr["labels"].lower()}"
+    text_lower = f"{github_pr["title"].lower()},{github_pr["labels"].lower()},{github_pr["branch_origin"].lower()}"
     #contains rollback or revert?
-    if ('rollback' in text_lower or 'roll-back' in text_lower or 'type:revert' in text_lower or 'revert' in text_lower):
+    if ('rollback' in text_lower or 'roll-back' in text_lower or 'revert' in text_lower):
         return True
     return False
 
