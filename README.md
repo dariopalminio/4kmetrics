@@ -8,7 +8,7 @@ DORA’s Four Keys or "4 Keys Metrics" can be divided into metrics that show the
 
 Top performers do well across all four metrics, and low performers do poorly.
 
-# Calculation based on github
+# Calculation based on github Pull requests
 
 To calculate Deployment frequency, Change lead time and Change fail percentage, we can get all closed and merged pullrequests from github.
 
