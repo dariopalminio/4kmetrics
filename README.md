@@ -30,10 +30,11 @@ To calculate Deployment frequency, Change lead time and Change fail percentage, 
   - Origin Branch name: “hotfix/JKEY-228-hotfix-title” o “bugfix/PKEY-321-bug-title”
 
 
-References:
-https://dora.dev/guides/dora-metrics-four-keys/
-https://cloud.google.com/blog/products/devops-sre/using-the-four-keys-to-measure-your-devops-performance
-https://docs.gitlab.com/ee/user/analytics/dora_metrics.html
-https://www.datadoghq.com/knowledge-center/dora-metrics/
-https://octopus.com/devops/metrics/dora-metrics/
+
+**References**:
+- https://dora.dev/guides/dora-metrics-four-keys/
+- https://cloud.google.com/blog/products/devops-sre/using-the-four-keys-to-measure-your-devops-performance
+- https://docs.gitlab.com/ee/user/analytics/dora_metrics.html
+- https://www.datadoghq.com/knowledge-center/dora-metrics/
+- https://octopus.com/devops/metrics/dora-metrics/
 
