@@ -13,7 +13,8 @@ Top performers do well across all four metrics, and low performers do poorly.
 To calculate Deployment frequency, Change lead time and Change fail percentage, we can get all closed and merged pullrequests from github.
 
 **Deployment Frequency**:
-- Only successful deployments (Deployment.statuses = success) are counted. To generally calculate the frequency, review the number of Pull request closed and successfully (merged). Pull requests with label "deploy: Success" must be included.
+- Only successful deployments (Deployment.statuses = success) are counted. To generally calculate the frequency, review the number of Pull request closed and successfully (merged). Pull requests with label "deploy: Success" must be included. Note that Pull requests that have a date in the "merged_at" field were successfully merged.
+- The PRs should have been for production. The merge had to be performed in the production branch (PR json["base"]["ref"]): "master", "main" or "production".
 - Rollbacks should be excluded: label "deploy: Rollback" or label “type: Revert” or Pull reques title "Revert..." or Pull reques title "Rollback...".
 - It is calculated as the average (mean) over the given date range (hourly, daily, weekly, monthly, or yearly). For example: 13.8 deployments Average weekly deployments, last 12 weeks.
 
