@@ -13,17 +13,20 @@ Top performers do well across all four metrics, and low performers do poorly.
 To calculate Deployment frequency, Change lead time and Change fail percentage, we can get all closed and merged pullrequests from github.
 
 **Deployment Frequency**:
-- Only successful deployments (Deployment.statuses = success) are counted.
-- To generally calculate the frequency, review the number of Pull request closed and successfully (merged).
+- Only successful deployments (Deployment.statuses = success) are counted. To generally calculate the frequency, review the number of Pull request closed and successfully (merged). Pull requests with label "deploy: Success" must be included.
+- Rollbacks should be excluded: label "deploy: Rollback" or label “type: Revert” or Pull reques title "Revert..." or Pull reques title "Rollback...".
 - It is calculated as the average (mean) over the given date range (hourly, daily, weekly, monthly, or yearly). For example: 13.8 deployments Average weekly deployments, last 12 weeks.
 
 **Lead Time for Changes**:
 - In the Pull request (PR) we look for the author's first commit in "commits_url" and get the "merged_at" date of the PR, then we subtract the date of the author's first commit from "merged_at" and get the cycle time: merged_at - author_first_commit.
 - It is calculated as the median over the given date range (hourly, daily, weekly, monthly, or yearly). For example: 9 days 1 hour Median cycle time, last 12 weeks.
 
-**Change failure rate**: 
+**Change Failure Rate**: 
 - Calculates change failure rate as the number of incidents (PR representing incidents) divided by the number of successfully deployments to a production environment (PR representing deployments to production). For example, if you have 10 deployments (considering one deployment per day) with two incidents on the first day and one incident on the last day, then your change failure rate is 3/10 = 0.3.
-- Incident counts are the number of Pull requests related to HOTFIX (indicated by label, PR title or origin branch name).
+- Incident counts are the number of Pull requests related to HOTFIX or BUGFIX (indicated by label, PR title or origin branch name).
+-- Label: "type: Fix"
+-- Title: "...hotfix..."
+-- Origin Branch name: “hotfix/JKEY-228-hotfix-title” o “bugfix/PKEY-321-bug-title”
 
 
 References:
