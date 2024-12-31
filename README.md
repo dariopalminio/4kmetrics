@@ -24,9 +24,9 @@ To calculate Deployment frequency, Change lead time and Change fail percentage, 
 **Change Failure Rate**: 
 - Calculates change failure rate as the number of incidents (PR representing incidents) divided by the number of successfully deployments to a production environment (PR representing deployments to production). For example, if you have 10 deployments (considering one deployment per day) with two incidents on the first day and one incident on the last day, then your change failure rate is 3/10 = 0.3.
 - Incident counts are the number of Pull requests related to HOTFIX or BUGFIX (indicated by label, PR title or origin branch name).
--- Label: "type: Fix"
--- Title: "...hotfix..."
--- Origin Branch name: “hotfix/JKEY-228-hotfix-title” o “bugfix/PKEY-321-bug-title”
+  - Label: "type: Fix"
+  - Title: "...hotfix..."
+  - Origin Branch name: “hotfix/JKEY-228-hotfix-title” o “bugfix/PKEY-321-bug-title”
 
 
 References:
