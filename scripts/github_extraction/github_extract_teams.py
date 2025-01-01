@@ -60,7 +60,7 @@ def get_team_info(GITHUB_ORG, team_name):
                 pages_max = extract_max_pages(response.headers.get('Link'))
             data = response.json()
             for item in data:
-                if (item["name"] == team_name):
+                if (item["name"].lower() == team_name.lower()):
                     team_info = {
                         "id": item["id"],
                         "name": item["name"], 

@@ -14,17 +14,17 @@ load_dotenv()
 GITHUB_ORG = os.getenv("GITHUB_ORG")
 if not GITHUB_ORG:
     raise ValueError("GITHUB_ORG not found in environment variables.")
-print(f'Your github org is (GITHUB_ORG): {GITHUB_ORG}')
 
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 if not GITHUB_TOKEN:
     raise ValueError("GitHub token GITHUB_TOKEN not found in environment variables.")
 
-input("Press a key to continue: ")
+print("From a indicated team name it will search its repositories and all closed Pull requests between two indicated dates from github org (GITHUB_ORG): ")
+print(f'{GITHUB_ORG}')
 
 # Extract team info with repositories list
-print('My team...')
-team_name = "BrigadaA"
+team_name = input("Enter a github team name: ")
+# team_name = "BrigadaA"
 team_info = {}
 team_info = get_team_info(GITHUB_ORG, team_name)
 team_repos_list = get_repos_name_list(team_info["repositories_url"])
@@ -36,8 +36,12 @@ print(team_info)
 
 # Extract Pull Request of team indicated
 print('Extracting pull request list...')
-start_date = "2024-01-01T00:00:00Z"
-end_date = "2024-04-30T23:59:59Z"
+#start_date = "2024-01-01T00:00:00Z"
+#end_date = "2024-04-30T23:59:59Z"
+start_date = input("Enter a start date with format YYYY-MM-DD: ")
+end_date = input("Enter a end date  with format YYYY-MM-DD: ")
+start_date = start_date + "T00:00:00Z"
+end_date = end_date + "T00:00:00Z"
 
 pull_requests = []
 for repo in team_info["repositories_list"]:
