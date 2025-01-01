@@ -19,7 +19,7 @@ GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 if not GITHUB_TOKEN:
     raise ValueError("GitHub token GITHUB_TOKEN not found in environment variables.")
 
-print("From a indicated team name it will search its repositories and all closed Pull requests between two indicated dates from github org (GITHUB_ORG): ")
+print("With a indicated team name, it will search its repositories and all closed Pull requests between two indicated dates, from github org (GITHUB_ORG): ")
 print(f'{GITHUB_ORG}')
 
 # Extract team info with repositories list
