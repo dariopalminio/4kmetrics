@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # encoding: utf-8
 import json
-import requests
-from github_extraction.github_pagination_helper import extract_max_pages
 from github_extraction.github_client import github_client_get
 from datetime import datetime
 
@@ -33,28 +31,26 @@ def extract_pr_list_from_repo_between_dates(GITHUB_ORG, repo_name, start_date, e
         "until": end_date
     }
 
-    OWNER = GITHUB_ORG
+    owner = GITHUB_ORG
     pull_requests = []
     page = 1
-    pages_max = 1
-    while page <= pages_max:
-        api_url = f'https://api.github.com/repos/{OWNER}/{repo_name}/pulls?page={page}'
-        try:
-            response = github_client_get(api_url, params=query_params)
-            if page == 1: 
-                pages_max = extract_max_pages(response.headers.get('Link'))
-            data = response.json()
-            if not data:
-                break  # Break the loop if no more data is returned
-            for item in data:
-                element = process_pull_request(GITHUB_ORG, item)
-                if element:
-                    pull_requests.append(element)
+
+    while True:
+        api_url = f'https://api.github.com/repos/{owner}/{repo_name}/pulls?page={page}'
+
+        response = github_client_get(api_url, params=query_params)
+        data = response.json()
+        if not data:
+            break  # Break the loop if no more data is returned
+        for item in data:
+            element = process_pull_request(GITHUB_ORG, item)
+            if element:
+                pull_requests.append(element)
+        if 'next' in response.links:
             page += 1
-        except Exception as e:
-            print(f"Failed to get a valid response from: {api_url}, due to {e}")
+        else:
             break
-    
+
     for pr in pull_requests:
         extract_cycle_time(GITHUB_ORG, pr)
 
@@ -183,26 +179,24 @@ def extract_first_commit_date(GITHUB_ORG, commits_url):
     OWNER = GITHUB_ORG
     first_commit_date = None
     page = 1
-    pages_max = 1
-    while page <= pages_max:
-        try:
-            response = github_client_get(commits_url)
-            if page == 1: 
-                pages_max = extract_max_pages(response.headers.get('Link'))
-            data = response.json()
-            for item in data:
-                commit_date = item['commit']['author']['date'] #The author date indicates when the original change was made.
-                if first_commit_date is None:
+    
+    while True:
+        response = github_client_get(commits_url)
+        data = response.json()
+        for item in data:
+            commit_date = item['commit']['author']['date'] #The author date indicates when the original change was made.
+            if first_commit_date is None:
+                first_commit_date = commit_date
+            else: 
+                date1 = datetime.fromisoformat(first_commit_date.replace('Z', ''))
+                date2 = datetime.fromisoformat(commit_date.replace('Z', ''))
+                if date2 < date1:
                     first_commit_date = commit_date
-                else: 
-                    date1 = datetime.fromisoformat(first_commit_date.replace('Z', ''))
-                    date2 = datetime.fromisoformat(commit_date.replace('Z', ''))
-                    if date2 < date1:
-                        first_commit_date = commit_date
+        if 'next' in response.links:
             page += 1
-        except Exception as e:
-            print(f"Failed to get a valid response from: {commits_url}, due to {e}")
+        else:
             break
+
     return first_commit_date
 
 def calculate_cycle_time(date_str_1: str, date_str_2: str) -> float:
