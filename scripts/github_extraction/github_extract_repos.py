@@ -1,5 +1,4 @@
 import requests
-from github_extraction.github_pagination_helper import extract_max_pages
 from github_extraction.github_client import github_client_get
 
 
@@ -27,19 +26,15 @@ def get_repos_name_list(repositories_url):
     - repositories_url example: https://api.github.com/organizations/87711415/team/3442512/repos
     """
     page = 1
-    pages_max = 1
     list = []
-    while page <= pages_max:
+    while True:
         api_url = f'{repositories_url}?page={page}'
-        try:
-            response = github_client_get(api_url)
-            if page == 1: 
-                pages_max = extract_max_pages(response.headers.get('Link'))
-            data = response.json()
-            list.extend([{"name": item["name"]} for item in data])
+        response = github_client_get(api_url)
+        data = response.json()
+        list.extend([{"name": item["name"]} for item in data])
+        if 'next' in response.links:
             page += 1
-        except Exception as e:
-            print(f"Failed to get a valid response from: {api_url}, due to {e}")
+        else:
             break
     return list
 

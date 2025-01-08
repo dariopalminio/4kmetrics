@@ -1,14 +1,12 @@
 #!/usr/bin/env python
 # encoding: utf-8
 import json
-import requests
-from github_extraction.github_pagination_helper import extract_max_pages
 from github_extraction.github_client import github_client_get
 from datetime import datetime
 
 def extract_pr_list_from_repo_between_dates(GITHUB_ORG, repo_name, start_date, end_date):
     """
-    Finds and loads all indicated pull request from the indicated repository name, between two dates, with status successful. 
+    Finds and loads all indicated closed pull request from the indicated repository name, between two dates, with status successful. 
     /repos/{owner}/{repo}/pulls
     with Query parameters state = closed
     curl -L 
@@ -17,36 +15,54 @@ def extract_pr_list_from_repo_between_dates(GITHUB_ORG, repo_name, start_date, e
     -H "X-GitHub-Api-Version: 2022-11-28" 
     https://api.github.com/repos/OWNER/REPO/pulls
     """
+
+    if not all([GITHUB_ORG, repo_name, start_date, end_date]):
+        raise ValueError("All parameters must be provided and non-empty.")
+    
+    if not all(map(is_valid_date, [start_date, end_date])):
+        raise ValueError("Dates must be in ISO format YYYY-MM-DD or YYYY-MM-DDTHH:MM:SSZ")
+
+    if datetime.fromisoformat(start_date.replace('Z', '+00:00')) > datetime.fromisoformat(end_date.replace('Z', '+00:00')):
+        raise ValueError("Start date must be before end date.")
+
     query_params = {
         "state": "closed",
         "since": start_date,
         "until": end_date
     }
 
-    OWNER = GITHUB_ORG
+    owner = GITHUB_ORG
     pull_requests = []
     page = 1
-    pages_max = 1
-    while page <= pages_max:
-        api_url = f'https://api.github.com/repos/{OWNER}/{repo_name}/pulls?page={page}'
-        try:
-            response = github_client_get(api_url, params=query_params)
-            if page == 1: 
-                pages_max = extract_max_pages(response.headers.get('Link'))
-            data = response.json()
-            for item in data:
-                element = process_pull_request(GITHUB_ORG, item)
-                if element:
-                    pull_requests.append(element)
+
+    while True:
+        api_url = f'https://api.github.com/repos/{owner}/{repo_name}/pulls?page={page}'
+
+        response = github_client_get(api_url, params=query_params)
+        data = response.json()
+        if not data:
+            break  # Break the loop if no more data is returned
+        for item in data:
+            element = process_pull_request(GITHUB_ORG, item)
+            if element:
+                pull_requests.append(element)
+        if 'next' in response.links:
             page += 1
-        except Exception as e:
-            print(f"Failed to get a valid response from: {api_url}, due to {e}")
+        else:
             break
-    
+
     for pr in pull_requests:
         extract_cycle_time(GITHUB_ORG, pr)
 
     return pull_requests
+
+def is_valid_date(date_str):
+    """Validate if the provided string is a valid ISO date format ("2024-04-30T23:59:59Z")."""
+    try:
+        datetime.fromisoformat(date_str.replace('Z', '+00:00'))  # ISO format with timezone
+        return True
+    except ValueError:
+        return False
 
 def process_pull_request(GITHUB_ORG, pr_json):
     """
@@ -89,8 +105,11 @@ def process_pull_request(GITHUB_ORG, pr_json):
         return None
 
 def is_merged_to_production(pr_json):
-    production_branch = {"refs/heads/master", "refs/heads/main", "refs/heads/production", "master", "main", "production"}
-    return ((pr_json["base"].get("ref") in production_branch) and pr_json["merged_at"] is not None)
+    """
+    If pull request was merged into production and has a merged date, then it was merged successfully and return True.
+    """
+    production_branches = {"refs/heads/master", "refs/heads/main", "refs/heads/production", "master", "main", "production"}
+    return ((pr_json["base"].get("ref") in production_branches) and pr_json["merged_at"] is not None)
 
 def process_labels_to_str(labels_json):
     labels = []
@@ -99,42 +118,31 @@ def process_labels_to_str(labels_json):
     return ",".join(labels)
 
 def is_feature(github_pr):
-    #Doesn't fix?
-    if (github_pr["is_fix"] or github_pr["is_hotfix"] or github_pr["is_rollback"]):
-        return False
-    #labels contains feat?
-    if ('type:feat' in github_pr["labels"].lower() or 'feat' in github_pr["labels"].lower() or 'enhancement' in github_pr["labels"].lower()):
+    text_lower = f"{github_pr["title"].lower()},{github_pr["labels"].lower()},{github_pr["branch_origin"].lower()}"
+    #contains feat?
+    if ('feat' in text_lower or 'enhancement' in text_lower):
         return True
-    #title contains bug fix?
-    if (('feat' in github_pr["title"].lower())):
+    #contains refactor?
+    if ('refactor' in text_lower):
         return True
-    #labels contains refactor?
-    if ('type:refactor' in github_pr["labels"].lower() or 'refactor' in github_pr["labels"].lower()):
+    #contains test?
+    if ('test' in text_lower):
         return True
-    #labels contains test?
-    if ('type:test' in github_pr["labels"].lower() or 'test' in github_pr["labels"].lower()):
+    #contains style?
+    if ('style' in text_lower):
         return True
-    #labels contains style?
-    if ('type:style' in github_pr["labels"].lower() or 'style' in github_pr["labels"].lower()):
-        return True
-    #labels contains doc?
-    if ('type:docs' in github_pr["labels"].lower() or 'doc' in github_pr["labels"].lower()):
-        return False
-    #labels contains build or chore?
-    if ('chore' in github_pr["labels"].lower() or 'build' in github_pr["labels"].lower()):
+    #contains performance or chore?
+    if ('perf' in text_lower):
         return False
     return False
 
 def is_fix(github_pr):
     text_lower = f"{github_pr["title"].lower()},{github_pr["labels"].lower()},{github_pr["branch_origin"].lower()}"
     #contains bug fix?
-    if (('bug' in text_lower or 'bugfix' in text_lower or 'bug-fix' in text_lower or 'bug fix' in text_lower)):
+    if (('type: fix' in text_lower or 'bug' in text_lower or 'bugfix' in text_lower or 'bug-fix' in text_lower or 'bug fix' in text_lower)):
         return True
     #contains hotfix?
     if ('hotfix' in text_lower or 'hot-fix' in text_lower or 'hot fix' in text_lower):
-        return True
-    #contains fix?    
-    if ('type:fix' in text_lower or 'type:bugfix' in text_lower or 'fix' in text_lower):
         return True
     return False
 
@@ -146,9 +154,9 @@ def is_hotfix(github_pr):
     return False
 
 def is_rollback(github_pr):
-    text_lower = f"{github_pr["title"].lower()},{github_pr["labels"].lower()}"
+    text_lower = f"{github_pr["title"].lower()},{github_pr["labels"].lower()},{github_pr["branch_origin"].lower()}"
     #contains rollback or revert?
-    if ('rollback' in text_lower or 'roll-back' in text_lower or 'type:revert' in text_lower or 'revert' in text_lower):
+    if ('rollback' in text_lower or 'roll-back' in text_lower or 'revert' in text_lower):
         return True
     return False
 
@@ -171,26 +179,24 @@ def extract_first_commit_date(GITHUB_ORG, commits_url):
     OWNER = GITHUB_ORG
     first_commit_date = None
     page = 1
-    pages_max = 1
-    while page <= pages_max:
-        try:
-            response = github_client_get(commits_url)
-            if page == 1: 
-                pages_max = extract_max_pages(response.headers.get('Link'))
-            data = response.json()
-            for item in data:
-                commit_date = item['commit']['author']['date'] #The author date indicates when the original change was made.
-                if first_commit_date is None:
+    
+    while True:
+        response = github_client_get(commits_url)
+        data = response.json()
+        for item in data:
+            commit_date = item['commit']['author']['date'] #The author date indicates when the original change was made.
+            if first_commit_date is None:
+                first_commit_date = commit_date
+            else: 
+                date1 = datetime.fromisoformat(first_commit_date.replace('Z', ''))
+                date2 = datetime.fromisoformat(commit_date.replace('Z', ''))
+                if date2 < date1:
                     first_commit_date = commit_date
-                else: 
-                    date1 = datetime.fromisoformat(first_commit_date.replace('Z', ''))
-                    date2 = datetime.fromisoformat(commit_date.replace('Z', ''))
-                    if date2 < date1:
-                        first_commit_date = commit_date
+        if 'next' in response.links:
             page += 1
-        except Exception as e:
-            print(f"Failed to get a valid response from: {commits_url}, due to {e}")
+        else:
             break
+
     return first_commit_date
 
 def calculate_cycle_time(date_str_1: str, date_str_2: str) -> float:
